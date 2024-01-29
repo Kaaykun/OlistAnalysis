@@ -1,8 +1,7 @@
-
 import pandas as pd
 import numpy as np
-from olist.data import Olist
-from olist.order import Order
+from utils.data import Olist
+from utils.order import Order
 
 
 class Seller:
@@ -17,11 +16,10 @@ class Seller:
         Returns a DataFrame with:
         'seller_id', 'seller_city', 'seller_state'
         """
-        sellers = self.data['sellers'].copy(
-        )  # Make a copy before using inplace=True so as to avoid modifying self.data
+        sellers = self.data['sellers'].copy()
         sellers.drop('seller_zip_code_prefix', axis=1, inplace=True)
-        sellers.drop_duplicates(
-            inplace=True)  # There can be multiple rows per seller
+        sellers.drop_duplicates(inplace=True)  # There can be multiple rows per seller
+
         return sellers
 
     def get_seller_delay_wait_time(self):
@@ -48,8 +46,8 @@ class Seller:
         # Compute delay and wait_time
         def delay_to_logistic_partner(d):
             days = np.mean(
-                (d.order_delivered_carrier_date - d.shipping_limit_date) /
-                np.timedelta64(24, 'h'))
+                (d.order_delivered_carrier_date - d.shipping_limit_date) / np.timedelta64(24, 'h'))
+
             if days > 0:
                 return days
             else:
@@ -57,8 +55,8 @@ class Seller:
 
         def order_wait_time(d):
             days = np.mean(
-                (d.order_delivered_customer_date - d.order_purchase_timestamp)
-                / np.timedelta64(24, 'h'))
+                (d.order_delivered_customer_date - d.order_purchase_timestamp) / np.timedelta64(24, 'h'))
+
             return days
 
         delay = ship.groupby('seller_id')\
@@ -102,8 +100,8 @@ class Seller:
             "date_last_sale": max
         })
         df['months_on_olist'] = round(
-            (df['date_last_sale'] - df['date_first_sale']) /
-            np.timedelta64(1, 'M'))
+            (df['date_last_sale'] - df['date_first_sale']) / np.timedelta64(1, 'M'))
+
         return df
 
     def get_quantity(self):
@@ -124,6 +122,7 @@ class Seller:
 
         result = n_orders.merge(quantity, on='seller_id')
         result['quantity_per_order'] = result['quantity'] / result['n_orders']
+
         return result
 
     def get_sales(self):
@@ -132,9 +131,9 @@ class Seller:
         'seller_id', 'sales'
         """
         return self.data['order_items'][['seller_id', 'price']]\
-            .groupby('seller_id')\
-            .sum()\
-            .rename(columns={'price': 'sales'})
+                   .groupby('seller_id')\
+                   .sum()\
+                   .rename(columns={'price': 'sales'})
 
     def get_review_score(self):
         """
@@ -176,9 +175,10 @@ class Seller:
         """
         Returns a DataFrame with:
         ['seller_id', 'seller_city', 'seller_state', 'delay_to_carrier',
-        'wait_time', 'date_first_sale', 'date_last_sale', 'months_on_olist', 'share_of_one_stars',
-        'share_of_five_stars', 'review_score', 'n_orders', 'quantity',
-        'quantity_per_order', 'sales']
+        'wait_time', 'date_first_sale', 'date_last_sale', 'months_on_olist',
+        'share_of_one_stars', 'share_of_five_stars', 'review_score',
+        'cost_of_reviews', 'n_orders', 'quantity', 'quantity_per_order',
+        'sales', 'revenues', 'profits']
         """
 
         training_set =\
@@ -193,10 +193,14 @@ class Seller:
                 self.get_sales(), on='seller_id'
                )
 
-        if self.get_review_score() is not None:
-            training_set = training_set.merge(self.get_review_score(),
-                                              on='seller_id')
-            training_set['revenue'] = 80 * training_set['months_on_olist'] + training_set['sales'] * 0.1
-            training_set['profit'] = training_set['revenue'] - training_set['cost_of_review']
+        # Add seller revenues and profits
+        olist_monthly_fee = 80
+        olist_sales_cut = 0.1
+
+        training_set['revenues'] = training_set['months_on_olist'] * olist_monthly_fee\
+            + olist_sales_cut * training_set['sales']
+
+        training_set['profits'] = training_set['revenues'] - training_set[
+            'cost_of_reviews']
 
         return training_set

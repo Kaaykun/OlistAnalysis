@@ -1,5 +1,4 @@
 from math import radians, sin, cos, asin, sqrt
-import matplotlib.pyplot as plt
 import seaborn as sns
 
 
