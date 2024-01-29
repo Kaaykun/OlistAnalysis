@@ -1,0 +1,3 @@
+numpy
+pandas==1.4.4
+ydata_profiling==4.1.2

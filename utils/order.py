@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
-from olist.utils import haversine_distance
-from olist.data import Olist
+from utils.utility import haversine_distance
+from utils.data import Olist
 
 
 class Order:
@@ -19,15 +19,13 @@ class Order:
         [order_id, wait_time, expected_wait_time, delay_vs_expected, order_status]
         and filters out non-delivered orders unless specified
         """
-        # Hint: Within this instance method, you have access to the instance of the class Order in the variable self, as well as all its attributes
-        # make sure to create a copy rather than a "view"
         orders = self.data['orders'].copy()
 
-        # filter delivered orders
+        # Filter delivered orders
         if is_delivered:
             orders = orders.query("order_status=='delivered'").copy()
 
-        # handle datetime
+        # Handle datetime
         orders.loc[:, 'order_delivered_customer_date'] = \
             pd.to_datetime(orders['order_delivered_customer_date'])
         orders.loc[:, 'order_estimated_delivery_date'] = \
@@ -35,13 +33,13 @@ class Order:
         orders.loc[:, 'order_purchase_timestamp'] = \
             pd.to_datetime(orders['order_purchase_timestamp'])
 
-        # compute delay vs expected
+        # Compute delay vs expected
         orders.loc[:, 'delay_vs_expected'] = \
             (orders['order_delivered_customer_date'] -
              orders['order_estimated_delivery_date']) / np.timedelta64(24, 'h')
 
         def handle_delay(x):
-            # We only want to keep delay where wait_time is longer than expected (not the other way around)
+            # I only want to keep delay where wait_time is longer than expected (not the other way around)
             # This is what drives customer dissatisfaction!
             if x > 0:
                 return x
@@ -51,12 +49,12 @@ class Order:
         orders.loc[:, 'delay_vs_expected'] = \
             orders['delay_vs_expected'].apply(handle_delay)
 
-        # compute wait time
+        # Compute wait time
         orders.loc[:, 'wait_time'] = \
             (orders['order_delivered_customer_date'] -
              orders['order_purchase_timestamp']) / np.timedelta64(24, 'h')
 
-        # compute expected wait time
+        # Compute expected wait time
         orders.loc[:, 'expected_wait_time'] = \
             (orders['order_estimated_delivery_date'] -
              orders['order_purchase_timestamp']) / np.timedelta64(24, 'h')
@@ -71,7 +69,7 @@ class Order:
         Returns a DataFrame with:
         order_id, dim_is_five_star, dim_is_one_star, review_score
         """
-        # import data
+        # Import data
         reviews = self.data['order_reviews']
 
         def dim_five_star(d):
@@ -142,7 +140,7 @@ class Order:
         Returns a DataFrame with:
         order_id, distance_seller_customer
         """
-        # import data
+        # Import data
         data = self.data
         orders = data['orders']
         order_items = data['order_items']
@@ -216,7 +214,6 @@ class Order:
         'number_of_products', 'number_of_sellers', 'price', 'freight_value',
         'distance_seller_customer']
         """
-        # Hint: make sure to re-use your instance methods defined above
         training_set =\
             self.get_wait_time(is_delivered)\
                 .merge(
