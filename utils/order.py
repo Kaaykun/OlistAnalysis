@@ -134,7 +134,6 @@ class Order:
 
         return price_freight
 
-    # Optional
     def get_distance_seller_customer(self):
         """
         Returns a DataFrame with:
@@ -225,6 +224,7 @@ class Order:
             ).merge(
                 self.get_price_and_freight(), on='order_id'
             )
+            
         # Skip heavy computation of distance_seller_customer unless specified
         if with_distance_seller_customer:
             training_set = training_set.merge(
