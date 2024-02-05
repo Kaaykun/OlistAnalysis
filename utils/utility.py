@@ -26,6 +26,7 @@ def return_significative_coef(model):
     # Extract coef_int
     coef = model.params.reset_index()
     coef.columns = ['variable', 'coef']
+
     return p_values.merge(coef,
                           on='variable')\
                    .query("p_value<0.05").sort_values(by='coef',
