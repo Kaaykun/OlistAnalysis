@@ -146,13 +146,13 @@ class Seller:
 
         df = orders_sellers.merge(orders_reviews, on='order_id')
 
-        df['cost_of_review'] = df['review_score'].map({
-            1: 100,
-            2: 50,
-            3: 40,
-            4: 0,
-            5: 0
-        })
+        # df['cost_of_review'] = df['review_score'].map({
+        #     1: 100,
+        #     2: 50,
+        #     3: 40,
+        #     4: 0,
+        #     5: 0
+        # })
 
         df_grouped_by_sellers = df.groupby('seller_id', as_index=False).agg({
             'dim_is_one_star':
@@ -160,13 +160,13 @@ class Seller:
             'dim_is_five_star':
             'mean',
             'review_score':
-            'mean',
-            'cost_of_review':
-            'sum'
+            'mean'#,
+            # 'cost_of_review':
+            # 'sum'
         })
         df_grouped_by_sellers.columns = [
             'seller_id', 'share_of_one_stars', 'share_of_five_stars',
-            'review_score', 'cost_of_review'
+            'review_score'#, 'cost_of_review'
         ]
 
         return df_grouped_by_sellers
@@ -191,16 +191,18 @@ class Seller:
                 self.get_quantity(), on='seller_id'
                ).merge(
                 self.get_sales(), on='seller_id'
+               ).merge(
+                self.get_review_score(), on='seller_id'
                )
 
         # Add seller revenues and profits
-        olist_monthly_fee = 80
-        olist_sales_cut = 0.1
+        # olist_monthly_fee = 80
+        # olist_sales_cut = 0.1
 
-        training_set['revenues'] = training_set['months_on_olist'] * olist_monthly_fee\
-            + olist_sales_cut * training_set['sales']
+        # training_set['revenues'] = training_set['months_on_olist'] * olist_monthly_fee\
+        #     + olist_sales_cut * training_set['sales']
 
-        training_set['profits'] = training_set['revenues'] - training_set[
-            'cost_of_reviews']
+        # training_set['profits'] = training_set['revenues'] - training_set[
+        #     'cost_of_review']
 
         return training_set
