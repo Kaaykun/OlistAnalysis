@@ -254,3 +254,4 @@ from olist.utils import *
 - `text_scatterplot(df, x, y)`: for a Dataframe `df`, creates a scatterplot with `x` and `y`. The index of `df` is the text label.
 - `return_significative_coef(model)`: from a `model` as a statsmodels object, returns significant coefficients.
 - `plot_kde_plot(df, variable, dimension)`: plots a side by side kdeplot from DataFrame `df` for `variable`, split by `dimension`.
+
